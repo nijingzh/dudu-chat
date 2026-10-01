@@ -1,4 +1,12 @@
-duduchat ｜ AI 交接上下文 v8（2026-10-01，P1C 复审通过 + P1D 交付待复审）
+duduchat ｜ AI 交接上下文 v9（2026-10-01，P1D 附批 + P2A 交付待复审）
+v9 更新（2026-10-01，P1D 附批 + P2A 服务端核心；触发 = 江衍「1.做 2.要 3.不用了 继续下一步」）：
+【裁决】①聊天图片消息要做（复用照片墙压缩）；②滑动切 tab 手势要；③特效不用录屏、保持现状。
+【P1D 附批】utils/image.ts compressImage 抽公共（照片墙/图片消息共用）；🖼️ 真选图 → canvas 压 900px/JPEG0.72 → 图片气泡（meta.src 渲染真图，无 src 回退渐变占位）→ 详情页同源；滑动切 tab：pointer 手势，横向 60px 且 |dx|>2|dy| 触发，输入框内不响应，边缘 tab 不越界，fire('swipe')。
+【P2A 服务端核心】server/（Node+Express+Socket.io，端口 3000）：邀请码即账号（两码两号、无密码、JWT 30d）、自动配对（两用户互绑单一 pair）、消息模型（text/image/voice + meta JSON + sent/read/recalled）、慢递信队列（到点投递 online 推 letter:due / 离线 bootstrap 兜底、重启恢复排程）、上传（multer 10MB → /uploads）、每日备份（PGlite 目录拷 backups/；生产 pg_dump 走 VPS cron）。数据层：DATABASE_URL 空 → PGlite（WASM 真 Postgres 免编译）；有值 → pg.Pool 连真 PostgreSQL；同一套 SQL。REST /api/*（login/bootstrap/messages/read/recalled/letters/upload）+ Socket.io（presence/typing/推送）。
+【P2A 实测】server/test/e2e.test.js 16/16 通过：登录×2+错码 401 / 配对 bootstrap / 在一起日期 / presence / A发B实时收 / typing / 已读回执 / 撤回落库 / 图片 meta 落库 / 慢递信 1.5s 到点投递 / 上传 URL / 离线信 bootstrap 兜底 / 备份产出。
+【环境坑】Node 26 无 sqlite3 预编译 → node-gyp 编译卡死且本机无 MSVC（vswhere 空）→ 已杀进程换 PGlite 方案（纯 WASM）；PGlite 0.2.x 没有 open()，就绪用 await lite.ready。npm install 超时 420s 顶后进程不死（node-gyp 子进程）——并行再装必炸 node_modules，先 Stop-Process 再清。
+【疑问/待办】前端接服务端是 P2B（在线状态/上传换 URL/断线重连/本地通知）；生产 JWT_SECRET/邀请码 env 到 VPS 部署时定；VPS 未买（已开清单给江衍）。
+───── 以下 v8 存档 ─────
 v8 更新（2026-10-01，照片墙附批 + P1D 交付；触发 = 江衍「照片墙可以做导入、删除的功能 其他都过 继续」）：
 【裁决】①P1C 复审通过（含全部主观微调值）；②照片墙做导入/删除功能（不走等真实照片路线）；③P1C 两问按「其他都过」收口：转盘 8 点子保持通用清单、语音「按住说话」手势归 P1D。
 【交付物】照片墙附批：sweetStore photos（localStorage duduchat-photos）+ 导入（file input 多选≤6 张、canvas 压到长边≤900px JPEG 0.72）+ 删除（右上 ✕）。P1D：pages/SweetMoments 照片墙功能版；components/effects/SweetEffects（全屏特效层：spoil 撒娇=白描边粉辉光环×2+9 飘心上浮 1500ms / missYou 想你=15 飘落爱心🌸✨ / celebrate 庆祝=3 烟花 13 粒径向 950ms+18 confetti / sad 不开心=灰纱 rgba(126,126,142,0.32)+16 雨滴）+ store/effectStore；MessageBubble 长按 350ms→反应条（💕😂😮😢👍🔥+撤回归长按菜单，裁决 v6④ 兑现：点击出撤回已撤）+ 反应浮出 900ms + 入场 spring(stiffness 320/damping 26) + 反应→特效映射（💕spoil/😂celebrate/😢sad）；ChatInputBar 按住说话（上滑 60px 取消、时长按秒入气泡）+ ✨特效菜单（撒娇/想你/庆祝→发消息+特效）；App 转场按 tab 方向滑入（x 26/18px、320ms）。

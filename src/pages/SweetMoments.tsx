@@ -3,18 +3,8 @@ import { useHaptics } from '../hooks/useHaptics';
 import { useSettingsStore } from '../store/settingsStore';
 import { useSweetStore, daysUntil, type Photo } from '../store/sweetStore';
 import { MOODS, togetherDays } from '../utils/constants';
+import { compressImage } from '../utils/image';
 import GlassCard from '../components/glass/GlassCard';
-
-/** 图片压到长边 ≤900px 的 JPEG dataURL（localStorage 友好） */
-async function compressImage(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.72);
-}
 
 /**
  * 甜蜜时光页（设计方案 5.3）：在一起天数大数字 + 心跳动画 / 纪念日倒计时 /

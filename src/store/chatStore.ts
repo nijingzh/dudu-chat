@@ -20,8 +20,8 @@ export interface Message {
   from: 'me' | 'other';
   kind: MessageKind;
   text: string;
-  /** image：占位渐变 tint；voice：时长秒数 */
-  meta?: { tint?: string; emoji?: string; duration?: number };
+  /** image：占位渐变 tint 或本地压缩图 src；voice：时长秒数 */
+  meta?: { tint?: string; emoji?: string; duration?: number; src?: string };
   time: string;
   status: MessageStatus;
 }

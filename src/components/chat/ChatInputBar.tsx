@@ -2,11 +2,13 @@ import { useRef, useState } from 'react';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useEffectStore, type EffectKind } from '../../store/effectStore';
 import { QUICK_EMOJIS } from '../../utils/constants';
+import { compressImage } from '../../utils/image';
 import GlassInput from '../glass/GlassInput';
 
 interface ChatInputBarProps {
   onSend: (text: string) => void;
   onSendVoice: (duration: number) => void;
+  onSendImage: (src: string) => void;
   onEffect: (kind: EffectKind, label: string) => void;
 }
 
@@ -20,7 +22,7 @@ const FX_ITEMS: { kind: EffectKind; icon: string; label: string; line: string }[
  * 底部玻璃输入栏（P1D 版）：表情 / 文本 / 按住说话（上滑取消）/ 图片占位 / ✨特效 / 发送。
  * 特效入口发消息 + 播全屏特效（4.2 消息特效）。
  */
-export default function ChatInputBar({ onSend, onSendVoice, onEffect }: ChatInputBarProps) {
+export default function ChatInputBar({ onSend, onSendVoice, onSendImage, onEffect }: ChatInputBarProps) {
   const { fire } = useHaptics();
   const playFx = useEffectStore((s) => s.play);
   const [text, setText] = useState('');
@@ -31,6 +33,7 @@ export default function ChatInputBar({ onSend, onSendVoice, onEffect }: ChatInpu
   const [cancelled, setCancelled] = useState(false);
   const holdStart = useRef(0);
   const startY = useRef(0);
+  const imgRef = useRef<HTMLInputElement>(null);
 
   const toast = (s: string) => {
     setNotice(s);
@@ -146,11 +149,24 @@ export default function ChatInputBar({ onSend, onSendVoice, onEffect }: ChatInpu
           aria-label="图片"
           onClick={() => {
             void fire('tap');
-            toast('图片消息 P1D 占位 · P2B 接上传');
+            imgRef.current?.click();
           }}
         >
           🖼️
         </button>
+        <input
+          ref={imgRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (!f) return;
+            void fire('send');
+            onSendImage(await compressImage(f));
+          }}
+        />
         <button
           type="button"
           className="bar-btn"

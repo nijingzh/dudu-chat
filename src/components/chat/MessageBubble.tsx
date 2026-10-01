@@ -76,7 +76,11 @@ export default function MessageBubble({ message, onRecall }: MessageBubbleProps)
             openDetail(message);
           }}
         >
-          <span>{message.meta?.emoji ?? '📷'}</span>
+          {message.meta?.src ? (
+            <img src={message.meta.src} alt="图片消息" />
+          ) : (
+            <span>{message.meta?.emoji ?? '📷'}</span>
+          )}
         </button>
       )}
       {message.kind === 'voice' && (

@@ -62,7 +62,11 @@ export default function MessageDetail() {
               background: `linear-gradient(135deg, ${message.meta?.tint ?? '#FFB3D9'}, rgba(255,255,255,0.5))`,
             }}
           >
-            <span>{message.meta?.emoji ?? '📷'}</span>
+            {message.meta?.src ? (
+              <img src={message.meta.src} alt="图片消息" />
+            ) : (
+              <span>{message.meta?.emoji ?? '📷'}</span>
+            )}
           </div>
           <div className="detail-zoom">
             <button

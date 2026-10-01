@@ -15,12 +15,13 @@ import Settings from './pages/Settings';
 import AnniversaryPage from './pages/AnniversaryPage';
 import MessageDetail from './pages/MessageDetail';
 import { useChatStore } from './store/chatStore';
-import { useUiStore } from './store/uiStore';
+import { useUiStore, type Tab } from './store/uiStore';
 import { applySettingsToCSS, useSettingsStore } from './store/settingsStore';
+import { useHaptics } from './hooks/useHaptics';
 import { INVITE_CODES } from './utils/constants';
 
 /** tab 顺序（决定转场方向） */
-const TAB_ORDER = ['chat', 'sweet', 'surprises', 'me'];
+const TAB_ORDER: Tab[] = ['chat', 'sweet', 'surprises', 'me'];
 
 /** 页面过渡：按 tab 方向滑入（编排级转场细节归 P1D 收尾） */
 function pageMotion(dir: number) {
@@ -38,11 +39,34 @@ export default function App() {
   const enterChat = useChatStore((s) => s.enterChat);
   const tab = useUiStore((s) => s.tab);
   const sub = useUiStore((s) => s.sub);
+  const setTab = useUiStore((s) => s.setTab);
   const closeSub = useUiStore((s) => s.closeSub);
   const settings = useSettingsStore();
+  const { fire } = useHaptics();
   const [hash, setHash] = useState(window.location.hash);
   const dirRef = useRef(1);
-  const prevTabRef = useRef('chat');
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const prevTabRef = useRef<Tab>('chat');
+
+  // 滑动切 tab：横向 60px 且明显偏水平才触发（P1D 手势）
+  const onSwipeStart = (e: React.PointerEvent) => {
+    if (sub || detail) return;
+    if ((e.target as HTMLElement).closest('input, textarea')) return;
+    swipeStart.current = { x: e.clientX, y: e.clientY };
+  };
+  const onSwipeEnd = (e: React.PointerEvent) => {
+    const s = swipeStart.current;
+    swipeStart.current = null;
+    if (!s || sub || detail) return;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    const idx = TAB_ORDER.indexOf(tab);
+    const next = idx + (dx < 0 ? 1 : -1);
+    if (next < 0 || next >= TAB_ORDER.length) return;
+    void fire('swipe');
+    setTab(TAB_ORDER[next]);
+  };
 
   // 转场方向：右→左为前进，左→右为返回
   if (prevTabRef.current !== tab) {
@@ -95,7 +119,11 @@ export default function App() {
         </motion.div>
       ) : (
         <>
-          <div className="app-shell">
+          <div
+            className="app-shell"
+            onPointerDown={onSwipeStart}
+            onPointerUp={onSwipeEnd}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${tab}-${sub}`}

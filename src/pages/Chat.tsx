@@ -106,6 +106,16 @@ export default function Chat() {
             }, 2800),
           );
         }}
+        onSendImage={(src) => {
+          sendMessage('', 'image', { src });
+          timersRef.current.push(
+            window.setTimeout(() => setOtherTyping(true), 1200),
+            window.setTimeout(() => {
+              appendReply();
+              void fire('receive');
+            }, 2800),
+          );
+        }}
         onEffect={(_kind, label) => {
           sendMessage(label);
           timersRef.current.push(
