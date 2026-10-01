@@ -5,18 +5,23 @@
 
 export const APP_NAME = 'duduchat';
 
-/** 邀请码机制（裁决：两码两账号，输对即登录） */
+/** 邀请码机制（裁决：两码两账号，输对即登录）——真值（2026-10-01 江衍提供） */
 export const INVITE_CODES: Record<string, { name: string; avatar: string }> = {
-  dudu520: { name: '衍', avatar: '🐱' },
-  mimi520: { name: '她', avatar: '🐰' },
+  [REDACTED]: { name: '衍', avatar: '🐱' },
+  [REDACTED]: { name: '她', avatar: '🐰' },
 };
 
 /** mock 资料（昵称/头像为占位） */
 export const MOCK_ME = { name: '衍', avatar: '🐱' };
 export const MOCK_OTHER = { nickname: '她', avatar: '🐰', online: true };
 
-/** 在一起天数（甜蜜时光页上线前先放导航里） */
-export const TOGETHER_DAYS = 520;
+/** 在一起的日子：2026-08-19（真值）。口径 = 含首日计数（8/19 是第 1 天） */
+export function togetherDays(): number {
+  const start = new Date(2026, 7, 19); // 月份 0-based：7 = 8 月
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((today.getTime() - start.getTime()) / 86_400_000) + 1;
+}
 
 /** 发消息后的 mock 自动回复（循环取） */
 export const AUTO_REPLIES = [

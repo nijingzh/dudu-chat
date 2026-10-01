@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useHaptics } from '../hooks/useHaptics';
 import { useChatStore } from '../store/chatStore';
-import { TOGETHER_DAYS } from '../utils/constants';
+import { togetherDays } from '../utils/constants';
 import Avatar from '../components/common/Avatar';
 import GlassNav from '../components/glass/GlassNav';
 import MessageBubble from '../components/chat/MessageBubble';
@@ -69,7 +69,7 @@ export default function Chat() {
                 className="inline-block h-2 w-2 rounded-full"
                 style={{ background: 'var(--color-mint)' }}
               />
-              {other.online ? '在线' : '离线'} · 在一起 {TOGETHER_DAYS} 天
+              {other.online ? '在线' : '离线'} · 在一起 {togetherDays()} 天
             </span>
           }
           right={
