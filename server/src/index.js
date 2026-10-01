@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import http from 'node:http';
 import { Server } from 'socket.io';
-import { PORT, UPLOAD_DIR } from './config.js';
+import { PORT, UPLOAD_DIR, INVITE_CODES } from './config.js';
 import { initDb, query } from './db.js';
 import { buildRoutes } from './routes.js';
 import { initSocket } from './socket.js';
@@ -14,6 +14,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 app.use(cors());
+app.disable('x-powered-by'); // 不给扫描器递指纹
 app.use(express.json({ limit: '15mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
@@ -51,6 +52,9 @@ initDb()
   .then(restoreLetters)
   .then(() => {
     startBackupSchedule();
+    if (INVITE_CODES.length === 0) {
+      console.warn('[warn] INVITE_CODES 未配置——所有登录将被拒绝（fail-closed）');
+    }
     server.listen(PORT, () => console.log(`duduchat-server :${PORT}（${process.env.DATABASE_URL ? 'PostgreSQL' : 'PGlite 本地库'}）`));
   })
   .catch((e) => {

@@ -18,7 +18,6 @@ import { useChatStore } from './store/chatStore';
 import { useUiStore, type Tab } from './store/uiStore';
 import { applySettingsToCSS, useSettingsStore } from './store/settingsStore';
 import { useHaptics } from './hooks/useHaptics';
-import { INVITE_CODES } from './utils/constants';
 
 /** tab 顺序（决定转场方向） */
 const TAB_ORDER: Tab[] = ['chat', 'sweet', 'surprises', 'me'];
@@ -85,7 +84,7 @@ export default function App() {
   // 记住会话：首登填码后启动免登录
   useEffect(() => {
     const saved = localStorage.getItem('duduchat-session');
-    if (saved && INVITE_CODES[saved]) enterChat();
+    if (saved) enterChat();
   }, [enterChat]);
 
   // 主题色 / 聊天背景 / 气泡柔光 → CSS 变量

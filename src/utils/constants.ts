@@ -5,11 +5,16 @@
 
 export const APP_NAME = 'duduchat';
 
-/** 邀请码机制（裁决：两码两账号，输对即登录）——真值（2026-10-01 江衍提供） */
-export const INVITE_CODES: Record<string, { name: string; avatar: string }> = {
-  [REDACTED]: { name: '衍', avatar: '🐱' },
-  [REDACTED]: { name: '她', avatar: '🐰' },
-};
+/**
+ * 邀请码机制（裁决：两码两账号，输对即登录）。
+ * 真值只存在服务器环境变量（systemd INVITE_CODES=…）——不进前端代码/仓库。
+ * P2B 起登录走 POST /api/login 服务端校验；此前 mock：任意非空码通过、身份用 mock 档。
+ */
+export const MOCK_LOGIN_PROFILE = { name: '衍', avatar: '🐱' };
+
+export function mockLookupInvite(code: string): { name: string; avatar: string } | null {
+  return code.trim() ? MOCK_LOGIN_PROFILE : null;
+}
 
 /** mock 资料（昵称/头像为占位） */
 export const MOCK_ME = { name: '衍', avatar: '🐱' };

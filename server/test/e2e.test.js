@@ -10,6 +10,9 @@ import { io as ioClient } from 'socket.io-client';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE = 'http://127.0.0.1:3001';
+/** 测试专用邀请码（真码只在服务器环境变量里，测试不引用） */
+const CODE_A = 'test-invite-a';
+const CODE_B = 'test-invite-b';
 const results = [];
 const check = (name, ok, extra = '') => {
   results.push({ name, ok });
@@ -35,7 +38,12 @@ async function main() {
   const dataDir = path.join(__dirname, 'testdata');
   await fs.promises.rm(dataDir, { recursive: true, force: true });
   const srv = spawn(process.execPath, [path.join(__dirname, '..', 'src', 'index.js')], {
-    env: { ...process.env, PORT: '3001', DATA_DIR: dataDir },
+    env: {
+      ...process.env,
+      PORT: '3001',
+      DATA_DIR: dataDir,
+      INVITE_CODES: `${CODE_A},${CODE_B}`,
+    },
     stdio: 'inherit',
   });
 
@@ -51,8 +59,8 @@ async function main() {
       });
       return r.json();
     };
-    const a = await login('[REDACTED]');
-    const b = await login('[REDACTED]');
+    const a = await login(CODE_A);
+    const b = await login(CODE_B);
     check('邀请码 A 登录拿 token', !!a.token);
     check('邀请码 B 登录拿 token', !!b.token);
     const bad = await login('wrong-code');

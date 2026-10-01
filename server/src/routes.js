@@ -14,6 +14,7 @@ import {
   letterOut,
   roomOf,
 } from './auth.js';
+import { loginLimit } from './limiter.js';
 import { query } from './db.js';
 import { INVITE_CODES, TOGETHER_DATE, UPLOAD_DIR } from './config.js';
 
@@ -34,8 +35,8 @@ const upload = multer({
 export function buildRoutes(io) {
   const r = express.Router();
 
-  // 邀请码登录：码即账号，两码两号
-  r.post('/login', async (req, res) => {
+  // 邀请码登录：码即账号，两码两号（严限速防爆破）
+  r.post('/login', loginLimit, async (req, res) => {
     const code = String(req.body?.inviteCode || '');
     const user = await ensureUser(code);
     if (!user) return res.status(401).json({ error: '邀请码不对' });

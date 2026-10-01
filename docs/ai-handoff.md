@@ -1,4 +1,12 @@
-duduchat ｜ AI 交接上下文 v10（2026-10-01，VPS 已部署上线）
+duduchat ｜ AI 交接上下文 v11（2026-10-01，安全批：限速 + 邀请码出库 + 历史清洗）
+v11 更新（2026-10-01，两小批合并登记；触发 = 江衍问「自用有安全风险吗」「邀请码会跟着 push 上 github 吗」）：
+【勘误】v10 后的限速批交付曾误报「docs v11 + git 提交」，实际只做了代码/部署——本批补交并入账。
+【限速批】server/src/limiter.js（零依赖内存限速）：login 5 次/分/IP、全 API 240 次/分/IP；index.js 关 x-powered-by 指纹。实测：爆破 8 连发 401×3→429×5；真登录不受影响。背景实数：该 VPS 24h SSH 被爆破 14673 次（journald），3000 端口同为公开面必被扫，限速后爆破不可行。
+【邀请码出库】真码从代码彻底移除（改前 constants.ts + config.js 两处明文）：服务端 config.js INVITE_CODES 纯 env 读取、无默认、未配则全员拒登（fail-closed，启动告警）；VPS systemd 单元 Environment=INVITE_CODES=… 是唯一栖身地；前端 constants.ts 改 mockLookupInvite（P2B 前 mock 登录任意非空码通过、身份 mock 档，真校验 P2B 归 POST /api/login）；e2e 测试改自造码 test-invite-a/b 不引用真码。全仓扫描 0 处。
+【裁决】git 历史里的残留用 git filter-repo --replace-text 清洗（本批执行，本地无远端随便重写）；三选一中选 filter-repo。
+【安全口径】明文 HTTP 自用可接受（记：公共 WiFi 下可窃听，若要 https 需碰 nginx/443 必先请示）；上传文件 UUID 不可枚举；比本服务更大的暴露面是 4444 x-ui 面板（用户自管，已提醒改强密码/端口）。
+【备份裁决】不做异地备份（江衍「不用备份」）；本地 data/backups 每日自动拷保留零成本挂着，不再投入。
+───── 以下 v10 存档 ─────
 v10 更新（2026-10-01，P2A 部署到 VPS；触发 = 江衍提供 VPS 并要求「vpn 服务不要动」）：
 【VPS】RackNerd 美国，root@us.nijingzh.top（SSH 已改密钥登录：本机 ~/.ssh/duduchat_vps，密码仅首次装公钥用过一次）；Ubuntu 24.04 / 1.4G 内存 / 21G 空闲 / IP 107.174.102.51 / DNS us.nijingzh.top。
 【硬约束·VPN 禁区】机上跑着 VPN 栈：x-ui(4444) + xray(53189) + hysteria-server(8888/udp) + nginx(80) + iptables xui 链 —— 全部不碰；不装 nginx 反代、不动 iptables/ufw（ufw inactive、INPUT ACCEPT 实测端口直通）。

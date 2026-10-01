@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import {
   AUTO_REPLIES,
-  INVITE_CODES,
+  mockLookupInvite,
   minutesAgo,
   MOCK_ME,
   MOCK_OTHER,
@@ -84,7 +84,7 @@ export const useChatStore = create<ChatState>((set) => ({
   detailMessage: null,
 
   login: (code) => {
-    const hit = INVITE_CODES[code.trim().toLowerCase()];
+    const hit = mockLookupInvite(code);
     if (!hit) return false;
     set({
       view: 'chat',
