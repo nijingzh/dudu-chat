@@ -1,4 +1,10 @@
-duduchat ｜ AI 交接上下文 v13（2026-10-01，P2B 收尾：断网保会话）
+duduchat ｜ AI 交接上下文 v14（2026-10-01，打包分发备料）
+v14 更新（2026-10-01，打包分发；触发 = 江衍「不要增值功能了 直接打包分发」+「提交 GitHub 我自己来」）：
+【裁决】Phase 3 增值不做（愿望清单/月度小结/纪念日提醒/恋爱积分全部放弃）；GitHub 建仓+push+Actions 触发由江衍本人操作（gh 认证不做）。
+【交付】①ios/ Capacitor 工程入库（@capacitor/ios@^6.2.0、cap add ios）：Info.plist 三处——ATS NSAllowsArbitraryLoads=true（不加则 App 连不上 http://us.nijingzh.top:3000 全哑）、竖屏锁定（设计稿 393×852 竖屏）、NSMicrophone/NSPhotoLibrary 用途串（语音真机批预留）；②.github/workflows/ios.yml：workflow_dispatch 手动触发、macos-15、npm ci→build→cap sync→xcodebuild CODE_SIGNING_ALLOWED=NO→Payload zip 出无签名 duduchat.ipa→artifact（90 天）；③docs/AltStore安装指南.md（官网版 iTunes+iCloud、AltServer、开发者模式、Sideload、7 天 Refresh、免费额度限制）；④.gitignore：ios/ 取消忽略改细粒度（Pods/build/public/xcuserdata 不入）。
+【待办-江衍】建私有仓 nijingzh/duduchat → push main → Actions 页 Run workflow → 下载 artifact → 按指南 AltStore 签名装机（两台手机各签一次、每周插线 Refresh）。
+【已知风险】npm install-scripts 新策略（npm 警告 approve）若 CI 的 npm ci 拦了 esbuild/rollup 原生二进制 postinstall，build 步骤会炸——届时 workflow 加 npm config set ignore-scripts false 或 approve 清单；xcodebuild 路径（DerivedData→App.app）以 CI 实跑为准，有偏差修 workflow 一版。
+───── 以下 v13 存档 ─────
 v13 更新（2026-10-01，P2B 疑问裁决落码；触发 = 江衍「1.可以 2不做 3修」）：
 【裁决】①语音真录音挂「真机批」（MediaRecorder + 上传，iOS WebView 兼容性真机验）；②sweetStore 多端同步不做（心情/日记/照片墙/便签保持本地）；③断网启动保会话——修。
 【交付】chatStore：消息本地缓存（duduchat-cache-msgs 最近 200 条、duduchat-cache-profile 资料档，引用变化才写）；restoreSession 失败分诊——401 才清 token 回登录，网络问题保留 token + 缓存进聊天页（socket 自动重连 onConnect 补拉）；发送失败改 status 'failed' + MessageBubble「（发送失败）点按重试」（retrySend 重发落库，替身 tmp id 显式追踪）。

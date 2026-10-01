@@ -1,0 +1,47 @@
+# 出「无签名 .ipa」——装机时由 AltStore 用免费 Apple ID 重签，不需要任何证书 Secrets。
+# 手动触发：仓库 Actions 页 → Build unsigned iOS IPA → Run workflow。
+name: Build unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web
+        run: npm run build
+
+      - name: Sync into iOS project (copies web assets + pod install)
+        run: npx cap sync ios
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath ios/App/build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Pack IPA
+        run: |
+          mkdir -p Payload
+          cp -r ios/App/build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qr duduchat.ipa Payload
+          ls -la duduchat.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: duduchat-ipa
+          path: duduchat.ipa
+          retention-days: 90

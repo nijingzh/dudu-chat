@@ -3,4 +3,9 @@ dist/
 data/
 *.local
 .DS_Store
-ios/
+# iOS 工程入库（打包流水线用），但 Pods 和构建产物不入
+ios/App/Pods/
+ios/App/build/
+ios/App/App/public/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
