@@ -1,4 +1,12 @@
-duduchat ｜ AI 交接上下文 v9（2026-10-01，P1D 附批 + P2A 交付待复审）
+duduchat ｜ AI 交接上下文 v10（2026-10-01，VPS 已部署上线）
+v10 更新（2026-10-01，P2A 部署到 VPS；触发 = 江衍提供 VPS 并要求「vpn 服务不要动」）：
+【VPS】RackNerd 美国，root@us.nijingzh.top（SSH 已改密钥登录：本机 ~/.ssh/duduchat_vps，密码仅首次装公钥用过一次）；Ubuntu 24.04 / 1.4G 内存 / 21G 空闲 / IP 107.174.102.51 / DNS us.nijingzh.top。
+【硬约束·VPN 禁区】机上跑着 VPN 栈：x-ui(4444) + xray(53189) + hysteria-server(8888/udp) + nginx(80) + iptables xui 链 —— 全部不碰；不装 nginx 反代、不动 iptables/ufw（ufw inactive、INPUT ACCEPT 实测端口直通）。
+【部署实况】/opt/duduchat-server（代码 scp 上去，npm install --omit=dev）；systemd 单元 duduchat.service（端口 3000、Restart=always、开机自启 enabled）；JWT_SECRET 服务器上 openssl rand 生成存于单元文件；DATA_DIR=/opt/duduchat-server/data（PGlite 零新服务；DATABASE_URL 一设即切 PostgreSQL）；TOGETHER_DATE=2026-08-19。
+【实测】公网 http://us.nijingzh.top:3000/health ✓；两枚邀请码真登录建号（衍/她）✓；bootstrap 配对 ✓ togetherDate ✓ 消息/信空 ✓；备份 devdb-2026-10-01 产出 ✓；部署后 hysteria/nginx/x-ui 依旧 active ✓。
+【注意】正式库已建账号——P2B 联调别拿真库打 mock 消息（e2e 测试自带临时 DATA_DIR，别对着 3000 端口跑 e2e.test.js）。备份目前同盘（data/backups 每日拷），异地备份待办。
+【下一步】P2B 前端接服务端（API_BASE=http://us.nijingzh.top:3000）：登录换 JWT、消息走 REST+Socket、在线/正在输入/已读、上传换 URL、断线重连/离线补偿、慢递信本地通知。
+───── 以下 v9 存档 ─────
 v9 更新（2026-10-01，P1D 附批 + P2A 服务端核心；触发 = 江衍「1.做 2.要 3.不用了 继续下一步」）：
 【裁决】①聊天图片消息要做（复用照片墙压缩）；②滑动切 tab 手势要；③特效不用录屏、保持现状。
 【P1D 附批】utils/image.ts compressImage 抽公共（照片墙/图片消息共用）；🖼️ 真选图 → canvas 压 900px/JPEG0.72 → 图片气泡（meta.src 渲染真图，无 src 回退渐变占位）→ 详情页同源；滑动切 tab：pointer 手势，横向 60px 且 |dx|>2|dy| 触发，输入框内不响应，边缘 tab 不越界，fire('swipe')。
