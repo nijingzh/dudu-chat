@@ -35,7 +35,6 @@ function pageMotion(dir: number) {
 export default function App() {
   const view = useChatStore((s) => s.view);
   const detail = useChatStore((s) => s.detailMessage);
-  const enterChat = useChatStore((s) => s.enterChat);
   const tab = useUiStore((s) => s.tab);
   const sub = useUiStore((s) => s.sub);
   const setTab = useUiStore((s) => s.setTab);
@@ -81,11 +80,10 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // 记住会话：首登填码后启动免登录
+  // 记住会话：有 token 直接恢复（服务端校验）
   useEffect(() => {
-    const saved = localStorage.getItem('duduchat-session');
-    if (saved) enterChat();
-  }, [enterChat]);
+    void useChatStore.getState().restoreSession();
+  }, []);
 
   // 主题色 / 聊天背景 / 气泡柔光 → CSS 变量
   useEffect(() => {

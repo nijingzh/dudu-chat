@@ -3,6 +3,7 @@ import { useHaptics } from '../../hooks/useHaptics';
 import { useEffectStore, type EffectKind } from '../../store/effectStore';
 import { QUICK_EMOJIS } from '../../utils/constants';
 import { compressImage } from '../../utils/image';
+import { pingTyping } from '../../store/chatStore';
 import GlassInput from '../glass/GlassInput';
 
 interface ChatInputBarProps {
@@ -130,7 +131,16 @@ export default function ChatInputBar({ onSend, onSendVoice, onSendImage, onEffec
         >
           😊
         </button>
-        <GlassInput value={text} onChange={setText} onEnter={send} placeholder="说点什么…" className="flex-1" />
+        <GlassInput
+          value={text}
+          onChange={(v) => {
+            setText(v);
+            if (v.trim()) pingTyping();
+          }}
+          onEnter={send}
+          placeholder="说点什么…"
+          className="flex-1"
+        />
         <button
           type="button"
           className={`bar-btn ${holding ? 'bar-btn--holding' : ''}`}

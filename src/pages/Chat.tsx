@@ -1,31 +1,29 @@
 import { useEffect, useRef } from 'react';
 import { useHaptics } from '../hooks/useHaptics';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore, pingTyping } from '../store/chatStore';
 import { togetherDays } from '../utils/constants';
-import Avatar from '../components/common/Avatar';
+import { api } from '../api/client';
 import GlassNav from '../components/glass/GlassNav';
+import Avatar from '../components/common/Avatar';
 import MessageBubble from '../components/chat/MessageBubble';
 import TypingIndicator from '../components/chat/TypingIndicator';
 import ChatInputBar from '../components/chat/ChatInputBar';
 
 /**
- * 聊天主页（设计方案第五节 2）：顶部玻璃导航（昵称 + 在线状态 + 在一起天数）
- * → 消息气泡区（左白右粉）→ 底部玻璃输入栏。
- * mock 轨道：发消息 → 对方「正在输入」→ 自动回复（P2B 换 Socket.io）。
+ * 聊天主页 —— P2B：服务端实时（Socket.io 在线状态 / 正在输入 / 已读）。
  */
 export default function Chat() {
   const { fire } = useHaptics();
   const messages = useChatStore((s) => s.messages);
   const otherTyping = useChatStore((s) => s.otherTyping);
+  const partnerOnline = useChatStore((s) => s.partnerOnline);
   const other = useChatStore((s) => s.other);
-  const me = useChatStore((s) => s.me);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const recall = useChatStore((s) => s.recall);
-  const setOtherTyping = useChatStore((s) => s.setOtherTyping);
-  const appendReply = useChatStore((s) => s.appendReply);
+  const markAllRead = useChatStore((s) => s.markAllRead);
   const logout = useChatStore((s) => s.logout);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const timersRef = useRef<number[]>([]);
+  const lastCount = useRef(0);
 
   // 新消息 / 正在输入 → 滚到底
   useEffect(() => {
@@ -33,25 +31,15 @@ export default function Chat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, otherTyping]);
 
-  // 离开页面：清 mock 定时器 + 复位「正在输入」，防指示器卡死
-  useEffect(
-    () => () => {
-      timersRef.current.forEach((t) => window.clearTimeout(t));
-      useChatStore.getState().setOtherTyping(false);
-    },
-    [],
-  );
-
-  const handleSend = (text: string) => {
-    sendMessage(text);
-    timersRef.current.push(
-      window.setTimeout(() => setOtherTyping(true), 1200),
-      window.setTimeout(() => {
-        appendReply();
-        void fire('receive');
-      }, 2800),
-    );
-  };
+  // 收到对方消息 → 触觉 + 已读回执
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (messages.length > lastCount.current && last?.from === 'other') {
+      void fire('receive');
+      markAllRead();
+    }
+    lastCount.current = messages.length;
+  }, [messages, fire, markAllRead]);
 
   return (
     <div className="chat-page">
@@ -61,16 +49,19 @@ export default function Chat() {
           title={
             <span className="flex items-center gap-2">
               <Avatar emoji={other.avatar} size={28} ring={false} />
-              {other.nickname}
+              {other.name}
             </span>
           }
           subtitle={
             <span className="flex items-center gap-1.5">
               <span
                 className="inline-block h-2 w-2 rounded-full"
-                style={{ background: 'var(--color-mint)' }}
+                style={{
+                  background:
+                    (partnerOnline ?? false) ? 'var(--color-mint)' : 'rgba(160,160,175,0.8)',
+                }}
               />
-              {other.online ? '在线' : '离线'} · 在一起 {togetherDays()} 天
+              {(partnerOnline ?? false) ? '在线' : '离线'} · 在一起 {togetherDays()} 天
             </span>
           }
           right={
@@ -87,44 +78,26 @@ export default function Chat() {
           <MessageBubble key={m.id} message={m} onRecall={recall} />
         ))}
         {otherTyping && <TypingIndicator />}
-        <div className="chat-me">
-          <Avatar emoji={me.avatar} size={22} ring={false} />
-        </div>
       </div>
 
       <ChatInputBar
         onSend={(text) => {
-          handleSend(text);
+          sendMessage(text);
+          pingTyping();
         }}
         onSendVoice={(duration) => {
           sendMessage('', 'voice', { duration });
-          timersRef.current.push(
-            window.setTimeout(() => setOtherTyping(true), 1200),
-            window.setTimeout(() => {
-              appendReply();
-              void fire('receive');
-            }, 2800),
-          );
         }}
-        onSendImage={(src) => {
-          sendMessage('', 'image', { src });
-          timersRef.current.push(
-            window.setTimeout(() => setOtherTyping(true), 1200),
-            window.setTimeout(() => {
-              appendReply();
-              void fire('receive');
-            }, 2800),
-          );
+        onSendImage={async (dataUrl) => {
+          try {
+            const { url } = await api.uploadDataUrl(dataUrl);
+            sendMessage('', 'image', { src: url.startsWith('http') ? url : `http://us.nijingzh.top:3000${url}` });
+          } catch {
+            sendMessage('', 'image', { src: dataUrl }); // 上传失败先本地显示
+          }
         }}
         onEffect={(_kind, label) => {
           sendMessage(label);
-          timersRef.current.push(
-            window.setTimeout(() => setOtherTyping(true), 1400),
-            window.setTimeout(() => {
-              appendReply();
-              void fire('receive');
-            }, 3200),
-          );
         }}
       />
     </div>

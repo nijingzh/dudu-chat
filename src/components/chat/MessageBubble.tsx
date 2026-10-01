@@ -37,6 +37,9 @@ export default function MessageBubble({ message, onRecall }: MessageBubbleProps)
   if (message.status === 'recalled-me') {
     return <div className="msg-recalled">你撤回了一条消息</div>;
   }
+  if (message.status === 'recalled-other') {
+    return <div className="msg-recalled">对方撤回了一条消息</div>;
+  }
 
   const startHold = () => {
     longPressed.current = false;

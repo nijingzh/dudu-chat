@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useHaptics } from '../hooks/useHaptics';
 import { useSweetStore } from '../store/sweetStore';
+import { api } from '../api/client';
 import { DATE_IDEAS, LOVE_QUOTES, PLAYLIST } from '../utils/constants';
 import GlassCard from '../components/glass/GlassCard';
 import GlassButton from '../components/glass/GlassButton';
@@ -146,6 +147,10 @@ export default function Surprises() {
                 if (!letterText.trim() || !letterDate) return;
                 void fire('send');
                 addLetter('衍', letterText, letterDate);
+                // 双写：服务器排程（在线到点推 / 离线开 App 兜底）
+                api
+                  .sendLetter(letterText.trim(), `${letterDate}T09:00:00`)
+                  .catch(() => undefined);
                 setLetterText('');
                 setLetterDate('');
               }}

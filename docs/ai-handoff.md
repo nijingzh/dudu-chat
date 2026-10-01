@@ -1,4 +1,11 @@
-duduchat ｜ AI 交接上下文 v11（2026-10-01，安全批：限速 + 邀请码出库 + 历史清洗）
+duduchat ｜ AI 交接上下文 v12（2026-10-01，P2B 前端接服务端交付待复审）
+v12 更新（2026-10-01，P2B；触发 = 江衍裁决 filter-repo 后「继续」）：
+【历史清洗】git filter-repo --replace-text 已执行：全历史邀请码残留 0、[REDACTED]×13、提交链完好（哈希已变、无远端）。
+【P2B 交付】前端全面接服务端：api/client.ts（REST+JWT，token 存 duduchat-token）、api/socket.ts（Socket.io 握手/重连/事件回调）；chatStore 换服务端驱动（mock 自动回复轨道退役）：登录 POST /api/login → bootstrap 建会话；消息乐观更新+POST 落库（tmp id → 真 id）；message:new/read/recalled 事件；pingTyping 节流 2s 报「正在输入」；presence:update 在线状态；慢递信双写（sweetStore 本地列表 + POST /api/letters 服务器排程）+ letter:due → Web Notification；图片消息 compressImage → POST /api/upload → meta.src 换 /uploads URL（上传失败降级本地 dataURL）；断线重连（socket.io reconnection）+ onConnect 拉 bootstrap 合并（保留 tmp 乐观消息）。服务端 socket.js 升级：在线名单 Map（连接时向新来者报对方当前在线状态、断开清零才广播离线）。App 启动 restoreSession（token → bootstrap，失败清 token 回登录）。
+【P2B 实测】双端真联调（本地服务 test 码 + 浏览器扮衍 + node 脚本扮她 server/test/second-client.mjs）：A 发→B 实时收→B 已读回执→A 亮「已读」→B typing→A 见指示器→B 回消息→A 实时收 ✓；presence：她在=在线、她走=离线（初始名单报到 + 断开翻转）✓；线上冒烟（真码登录/在线/空库不发消息）✓。
+【自修】①onConnect 全量替换与乐观消息竞态吞消息 → 合并保留 tmp_；②agent-browser fill 打在 GlassInput 的 div 上（.glass-input 是外层、真 input 在里层）→ 选择器须 .glass-input input；③在线口径：曾拿自己的连接状态冒充对方在线 → 服务端报真实名单；④build 管道 `| tail` 掩盖退出码误放行 tsc 错（教训：build 判定看内容不看链）。
+【遗留/疑问】①语音仍是本地 mock 气泡（真录音 MediaRecorder + 上传 iOS WebView 兼容性要真机验，建议真机阶段做）；②sweetStore（心情/日记/照片墙/便签）仍纯本地无多端同步；③断网启动时 restoreSession 失败即清 token（要重输码）——建议改为离线保留 token 显示本地记录，待裁决。
+───── 以下 v11 存档 ─────
 v11 更新（2026-10-01，两小批合并登记；触发 = 江衍问「自用有安全风险吗」「邀请码会跟着 push 上 github 吗」）：
 【勘误】v10 后的限速批交付曾误报「docs v11 + git 提交」，实际只做了代码/部署——本批补交并入账。
 【限速批】server/src/limiter.js（零依赖内存限速）：login 5 次/分/IP、全 API 240 次/分/IP；index.js 关 x-powered-by 指纹。实测：爆破 8 连发 401×3→429×5；真登录不受影响。背景实数：该 VPS 24h SSH 被爆破 14673 次（journald），3000 端口同为公开面必被扫，限速后爆破不可行。

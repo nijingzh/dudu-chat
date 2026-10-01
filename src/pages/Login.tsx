@@ -14,13 +14,17 @@ import { APP_NAME, LOGIN_FOOTER, MOCK_ME, MOCK_OTHER } from '../utils/constants'
 export default function Login() {
   const login = useChatStore((s) => s.login);
   const [code, setCode] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
   const [shakeKey, setShakeKey] = useState(0);
+  const [busy, setBusy] = useState(false);
 
-  const enter = () => {
-    const ok = login(code);
+  const enter = async () => {
+    if (busy || !code.trim()) return;
+    setBusy(true);
+    const ok = await login(code);
+    setBusy(false);
     if (!ok) {
-      setError(true);
+      setError(navigator.onLine ? '邀请码不对哦，再看看？' : '网络没连上，稍后再试');
       setShakeKey((k) => k + 1);
     }
   };
@@ -43,14 +47,14 @@ export default function Login() {
           value={code}
           onChange={(v) => {
             setCode(v);
-            setError(false);
+            setError('');
           }}
           onEnter={enter}
           placeholder="输入属于我们的邀请码"
         />
-        {error && <p className="login-error">邀请码不对哦，再看看？</p>}
+        {error && <p className="login-error">{error}</p>}
         <GlassButton onClick={enter} className="login-enter">
-          进入小世界
+          {busy ? '正在进入…' : '进入小世界'}
         </GlassButton>
       </GlassCard>
 
