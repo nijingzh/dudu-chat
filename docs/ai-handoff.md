@@ -1,4 +1,9 @@
-duduchat ｜ AI 交接上下文 v12（2026-10-01，P2B 前端接服务端交付待复审）
+duduchat ｜ AI 交接上下文 v13（2026-10-01，P2B 收尾：断网保会话）
+v13 更新（2026-10-01，P2B 疑问裁决落码；触发 = 江衍「1.可以 2不做 3修」）：
+【裁决】①语音真录音挂「真机批」（MediaRecorder + 上传，iOS WebView 兼容性真机验）；②sweetStore 多端同步不做（心情/日记/照片墙/便签保持本地）；③断网启动保会话——修。
+【交付】chatStore：消息本地缓存（duduchat-cache-msgs 最近 200 条、duduchat-cache-profile 资料档，引用变化才写）；restoreSession 失败分诊——401 才清 token 回登录，网络问题保留 token + 缓存进聊天页（socket 自动重连 onConnect 补拉）；发送失败改 status 'failed' + MessageBubble「（发送失败）点按重试」（retrySend 重发落库，替身 tmp id 显式追踪）。
+【实测】杀服务端启动 → 直进聊天页显 2 条缓存（不踢登录）✓；断网发消息 → 失败行 ✓；起回服务端 → 自动重连 + 点按重试 → 气泡正常 + 服务端库实查到该条 ✓。
+───── 以下 v12 存档 ─────
 v12 更新（2026-10-01，P2B；触发 = 江衍裁决 filter-repo 后「继续」）：
 【历史清洗】git filter-repo --replace-text 已执行：全历史邀请码残留 0、[REDACTED]×13、提交链完好（哈希已变、无远端）。
 【P2B 交付】前端全面接服务端：api/client.ts（REST+JWT，token 存 duduchat-token）、api/socket.ts（Socket.io 握手/重连/事件回调）；chatStore 换服务端驱动（mock 自动回复轨道退役）：登录 POST /api/login → bootstrap 建会话；消息乐观更新+POST 落库（tmp id → 真 id）；message:new/read/recalled 事件；pingTyping 节流 2s 报「正在输入」；presence:update 在线状态；慢递信双写（sweetStore 本地列表 + POST /api/letters 服务器排程）+ letter:due → Web Notification；图片消息 compressImage → POST /api/upload → meta.src 换 /uploads URL（上传失败降级本地 dataURL）；断线重连（socket.io reconnection）+ onConnect 拉 bootstrap 合并（保留 tmp 乐观消息）。服务端 socket.js 升级：在线名单 Map（连接时向新来者报对方当前在线状态、断开清零才广播离线）。App 启动 restoreSession（token → bootstrap，失败清 token 回登录）。

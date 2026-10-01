@@ -473,10 +473,18 @@ body {
   color: var(--color-lavender);
 }
 .msg-recalled {
-  align-self: center;
+  text-align: center;
   font-size: 11px;
-  opacity: 0.55;
-  margin: 4px 0 14px;
+  color: rgba(90, 60, 80, 0.75);
+  margin: 6px 0;
+}
+.msg-failed {
+  border: 1px dashed rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.12);
+  border-radius: 999px;
+  padding: 5px 14px;
+  cursor: pointer;
+  color: var(--color-coral);
 }
 .msg-recall-btn {
   margin-top: 5px;

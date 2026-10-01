@@ -16,6 +16,7 @@ const REACTION_FX: Record<string, EffectKind> = {
 interface MessageBubbleProps {
   message: Message;
   onRecall: (id: string) => void;
+  onRetry: (id: string) => void;
 }
 
 /**
@@ -23,7 +24,7 @@ interface MessageBubbleProps {
  * + 撤回（仅自己的文字消息，裁决：点击入口已撤、收进长按菜单）。
  * 图片/语音点击 → 消息详情页。
  */
-export default function MessageBubble({ message, onRecall }: MessageBubbleProps) {
+export default function MessageBubble({ message, onRecall, onRetry }: MessageBubbleProps) {
   const { fire } = useHaptics();
   const openDetail = useChatStore((s) => s.openDetail);
   const playFx = useEffectStore((s) => s.play);
@@ -39,6 +40,13 @@ export default function MessageBubble({ message, onRecall }: MessageBubbleProps)
   }
   if (message.status === 'recalled-other') {
     return <div className="msg-recalled">对方撤回了一条消息</div>;
+  }
+  if (message.status === 'failed') {
+    return (
+      <button type="button" className="msg-recalled msg-failed" onClick={() => onRetry(message.id)}>
+        （发送失败）点按重试
+      </button>
+    );
   }
 
   const startHold = () => {

@@ -7,7 +7,7 @@ import { api, setToken, getToken, type ServerMessage, type ServerLetter } from '
 import { connectSocket, disconnectSocket, emitTyping } from '../api/socket';
 
 export type MessageKind = 'text' | 'image' | 'voice';
-export type MessageStatus = 'sent' | 'read' | 'recalled-me' | 'recalled-other';
+export type MessageStatus = 'sent' | 'read' | 'recalled-me' | 'recalled-other' | 'failed';
 
 export interface Message {
   id: string;
@@ -31,6 +31,25 @@ export interface Person {
 const AVATARS: Record<string, string> = { 衍: '🐱', 她: '🐰' };
 const avatarOf = (name: string) => AVATARS[name] || '🐱';
 
+/** 本地缓存：断网启动保会话用（最近 200 条 + 资料档） */
+const CACHE_MSGS = 'duduchat-cache-msgs';
+const CACHE_PROFILE = 'duduchat-cache-profile';
+function saveCache(key: string, data: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    /* 满了就算了 */
+  }
+}
+function loadCache<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 const hhmm = (iso: string) => {
   const d = new Date(iso);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -50,6 +69,7 @@ interface ChatState {
   logout: () => void;
   enterChat: () => void;
   sendMessage: (text: string, kind?: MessageKind, meta?: Message['meta']) => void;
+  retrySend: (id: string) => void;
   recall: (id: string) => void;
   markAllRead: () => void;
   setOtherTyping: (v: boolean) => void;
@@ -172,19 +192,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const boot = await api.bootstrap();
       myId = boot.user.id;
-      set({
-        view: 'chat',
+      const profile = {
         me: { id: boot.user.id, name: boot.user.name, avatar: avatarOf(boot.user.name) },
         other: boot.partner
           ? { id: boot.partner.id, name: boot.partner.name, avatar: avatarOf(boot.partner.name) }
           : { name: 'TA', avatar: '🐰' },
+      };
+      saveCache(CACHE_PROFILE, profile);
+      set({
+        view: 'chat',
+        ...profile,
         messages: boot.messages.map(toLocal),
       });
       wire(set, get);
       return true;
-    } catch {
-      setToken(null);
-      return false;
+    } catch (e) {
+      // 401 = token 失效才回登录页；网络问题保留 token 用本地缓存进聊天页（联网自动补拉）
+      if (String(e).includes('401')) {
+        setToken(null);
+        return false;
+      }
+      const cached = loadCache<{ me: Person; other: Person } | null>(CACHE_PROFILE, null);
+      set({
+        view: 'chat',
+        me: cached?.me ?? get().me,
+        other: cached?.other ?? get().other,
+        messages: loadCache<Message[]>(CACHE_MSGS, get().messages),
+      });
+      wire(set, get); // socket 自动重连，连上即 onConnect 补拉
+      return true;
     }
   },
 
@@ -220,7 +256,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
       .catch(() =>
         set({
           messages: get().messages.map((x) =>
-            x.id === tmpId ? { ...x, status: 'recalled-me', text: '（发送失败）' } : x,
+            x.id === tmpId ? { ...x, status: 'failed' as const } : x,
+          ),
+        }),
+      );
+  },
+
+  retrySend: (id) => {
+    const msg = get().messages.find((m) => m.id === id);
+    if (!msg || msg.status !== 'failed') return;
+    const newTmpId = `tmp_${Date.now()}`;
+    set({
+      messages: get().messages.map((m) =>
+        m.id === id ? { ...m, status: 'sent' as const, id: newTmpId } : m,
+      ),
+    });
+    api
+      .sendMessage({
+        kind: msg.kind,
+        text: msg.text,
+        meta: msg.meta,
+        clientTs: new Date().toISOString(),
+      })
+      .then((m) =>
+        set({
+          messages: get().messages.map((x) => (x.id === newTmpId ? toLocal(m) : x)),
+        }),
+      )
+      .catch(() =>
+        set({
+          messages: get().messages.map((x) =>
+            x.id === newTmpId ? { ...x, status: 'failed' as const } : x,
           ),
         }),
       );
@@ -259,3 +325,12 @@ export function pingTyping() {
   lastTyping = now;
   emitTyping();
 }
+
+/** 消息本地缓存（引用变化才写，最近 200 条）——断网启动显示本地记录用 */
+let lastMessages: Message[] | null = null;
+useChatStore.subscribe((s) => {
+  if (s.messages !== lastMessages) {
+    lastMessages = s.messages;
+    saveCache(CACHE_MSGS, s.messages.slice(-200));
+  }
+});

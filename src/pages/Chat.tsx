@@ -19,6 +19,7 @@ export default function Chat() {
   const partnerOnline = useChatStore((s) => s.partnerOnline);
   const other = useChatStore((s) => s.other);
   const sendMessage = useChatStore((s) => s.sendMessage);
+  const retrySend = useChatStore((s) => s.retrySend);
   const recall = useChatStore((s) => s.recall);
   const markAllRead = useChatStore((s) => s.markAllRead);
   const logout = useChatStore((s) => s.logout);
@@ -75,7 +76,7 @@ export default function Chat() {
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-day">今天</div>
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} onRecall={recall} />
+          <MessageBubble key={m.id} message={m} onRecall={recall} onRetry={retrySend} />
         ))}
         {otherTyping && <TypingIndicator />}
       </div>
