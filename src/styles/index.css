@@ -1,0 +1,285 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   duduchat — Liquid Glass 甜蜜风设计系统
+   规格来源：docs/设计方案.md 3.1–3.3（实数照抄，勿改数值）
+   ============================================================ */
+
+@theme {
+  /* 3.1 色彩 — 主渐变 */
+  --color-pink-light: #ffb6c1;
+  --color-pink-purple: #e8a0bf;
+  --color-peach: #f7cec5;
+  --color-cream-pink: #f8e8ee;
+  --color-dream-purple: #d4a5ff;
+  --color-sakura-pink: #ffb3d9;
+
+  /* 3.1 色彩 — 消息气泡 */
+  --color-bubble-self-from: #ff8fab;
+  --color-bubble-self-to: #ff6b8a;
+
+  /* 3.1 辅助色 */
+  --color-gold: #ffd700;
+  --color-sakura-white: #fff5f7;
+  --color-lavender: #c8a2ff;
+  --color-mint: #a8e6cf;
+  --color-coral: #ff6b6b;
+
+  /* 3.2 字体 */
+  --font-display: 'Quicksand', 'Noto Sans SC', sans-serif;
+  --font-body: 'Noto Sans SC', -apple-system, 'PingFang SC', sans-serif;
+  --font-num: 'Comfortaa', 'Quicksand', sans-serif;
+}
+
+/* ---------- 3.3 Liquid Glass 组件规范 ---------- */
+
+/* GlassCard 玻璃卡片：bg rgba(255,255,255,0.22) / blur 28px / 圆角 24px
+   边框 1px rgba(255,255,255,0.35) / 阴影粉色柔光 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(255, 182, 193, 0.25);
+}
+
+/* GlassButton 玻璃按钮：圆角 20px / 渐变叠加 / 按压 scale(0.96) */
+.glass-button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 32px rgba(255, 182, 193, 0.25);
+  transition:
+    transform 160ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
+}
+/* 渐变叠加：顶部柔白高光 */
+.glass-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(255, 179, 217, 0.12) 100%
+  );
+  pointer-events: none;
+}
+.glass-button:active {
+  transform: scale(0.96);
+}
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.glass-button--primary {
+  background: linear-gradient(135deg, var(--color-bubble-self-from), var(--color-bubble-self-to));
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* GlassNav 底部/顶部玻璃导航：blur 32px / 顶部渐变高光 / 圆角 28px */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(255, 182, 193, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+/* 顶部渐变高光 */
+.glass-nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.85),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* GlassInput 玻璃输入框 */
+.glass-input {
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(255, 182, 193, 0.25);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.glass-input:focus-within {
+  border-color: rgba(200, 162, 255, 0.8);
+  box-shadow:
+    0 8px 32px rgba(255, 182, 193, 0.25),
+    0 0 0 3px rgba(200, 162, 255, 0.25);
+}
+
+/* ---------- 3.1 消息气泡 ---------- */
+/* 自己：渐变粉 #FF8FAB → #FF6B8A */
+.bubble-self {
+  background: linear-gradient(
+    135deg,
+    var(--color-bubble-self-from),
+    var(--color-bubble-self-to)
+  );
+  color: #fff;
+  border-radius: 20px 20px 6px 20px;
+  box-shadow: 0 6px 20px rgba(255, 107, 138, 0.35);
+}
+/* 对方：半透明白 rgba(255,255,255,0.55) + 彩色描边 */
+.bubble-other {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-radius: 20px 20px 20px 6px;
+  box-shadow:
+    0 6px 20px rgba(255, 182, 193, 0.22),
+    inset 0 0 0 1px rgba(200, 162, 255, 0.55);
+  color: #4a3b4d;
+}
+
+/* ---------- 全局氛围 ---------- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: var(--font-body);
+}
+body {
+  color: #4a3b4d;
+}
+.duduchat-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(
+    135deg,
+    var(--color-pink-light),
+    var(--color-pink-purple)
+  );
+}
+/* 柔和叠层：梦幻渐变 + 奶白粉，弱化主渐变的平铺感 */
+.duduchat-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      60% 42% at 82% 12%,
+      rgba(212, 165, 255, 0.55),
+      transparent 70%
+    ),
+    radial-gradient(
+      52% 38% at 12% 88%,
+      rgba(248, 232, 238, 0.5),
+      transparent 72%
+    ),
+    radial-gradient(
+      40% 30% at 50% 50%,
+      rgba(255, 179, 217, 0.3),
+      transparent 75%
+    );
+}
+
+/* ---------- FloatingParticles 飘浮粒子（双层：外层漂移 / 内层摇摆）---------- */
+.particles-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.particle {
+  position: absolute;
+  bottom: -8vh;
+  will-change: transform;
+  animation: particle-drift linear infinite;
+  opacity: 0;
+}
+.particle-sway {
+  display: block;
+  animation: particle-sway ease-in-out infinite alternate;
+}
+@keyframes particle-drift {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.75;
+  }
+  86% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(-114vh);
+    opacity: 0;
+  }
+}
+@keyframes particle-sway {
+  from {
+    transform: translateX(-10px) rotate(-6deg);
+  }
+  to {
+    transform: translateX(10px) rotate(6deg);
+  }
+}
+
+/* ---------- 触觉 debug 提示（开发用，真机前的视觉替身）---------- */
+.haptic-debug {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #7a5a72;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  padding: 8px 16px;
+  box-shadow: 0 8px 24px rgba(255, 182, 193, 0.3);
+}
+
+/* ---------- /ui 演示页排版 ---------- */
+.uikit-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 24px 16px calc(48px + env(safe-area-inset-bottom));
+}
+.uikit-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.uikit-sec-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.uikit-hex {
+  font-family: var(--font-num);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
