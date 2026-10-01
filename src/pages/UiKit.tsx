@@ -28,6 +28,7 @@ const HAPTIC_ORDER: HapticKind[] = [
   'special',
   'sweet',
   'page',
+  'tap',
 ];
 
 function SectionTitle({ children, hint }: { children: string; hint?: string }) {
@@ -121,12 +122,13 @@ export default function UiKit() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <GlassButton className="px-5 py-2.5 text-[13px] font-medium">GlassButton</GlassButton>
-          <GlassButton variant="primary" className="px-5 py-2.5 text-[13px] font-medium">
+          <GlassButton variant="primary" haptic="send" className="px-5 py-2.5 text-[13px] font-medium">
             发送 💗
           </GlassButton>
         </div>
         <p className="text-[11px] opacity-70">
-          圆角 20px · 渐变叠加 · 按压 scale(0.96)（点按会触发发送触觉）
+          圆角 20px · 渐变叠加 · 按压 scale(0.96)；触觉：通用按钮 = 按钮轻触 Selection
+          轻，发送键 = 发送消息 Impact Light
         </p>
 
         <GlassInput
@@ -155,7 +157,7 @@ export default function UiKit() {
       </div>
 
       {/* ---------- 触觉反馈 ---------- */}
-      <SectionTitle hint="3.4 · 点按测试">触觉反馈</SectionTitle>
+      <SectionTitle hint="3.4 · 点按测试 · 末行裁决补充">触觉反馈</SectionTitle>
       <GlassCard className="px-4 py-3">
         <div className="space-y-1">
           {HAPTIC_ORDER.map((kind) => {

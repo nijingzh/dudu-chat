@@ -15,7 +15,8 @@ export type HapticKind =
   | 'swipe' // 滑动切换   Selection 轻微
   | 'special' // 特殊表情   Impact Heavy
   | 'sweet' // 甜蜜时刻   Notification Success × 2
-  | 'page'; // 页面切换   Selection 轻
+  | 'page' // 页面切换   Selection 轻
+  | 'tap'; // 按钮轻触   Selection 轻（裁决补充：通用按钮档，发送键走 send）
 
 interface HapticSpec {
   label: string;
@@ -82,6 +83,13 @@ export const HAPTIC_SPECS: Record<HapticKind, HapticSpec> = {
   },
   page: {
     label: '页面切换',
+    type: 'Selection',
+    intensity: '轻',
+    vibrate: 4,
+    run: () => Haptics.selectionChanged(),
+  },
+  tap: {
+    label: '按钮轻触',
     type: 'Selection',
     intensity: '轻',
     vibrate: 4,
