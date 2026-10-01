@@ -13,11 +13,15 @@ import {
 } from '../utils/constants';
 
 export type MessageStatus = 'sent' | 'read' | 'recalled-me' | 'recalled-other';
+export type MessageKind = 'text' | 'image' | 'voice';
 
 export interface Message {
   id: string;
   from: 'me' | 'other';
+  kind: MessageKind;
   text: string;
+  /** image：占位渐变 tint；voice：时长秒数 */
+  meta?: { tint?: string; emoji?: string; duration?: number };
   time: string;
   status: MessageStatus;
 }
@@ -30,6 +34,7 @@ interface ChatState {
   other: typeof MOCK_OTHER;
   messages: Message[];
   otherTyping: boolean;
+  detailMessage: Message | null;
   login: (code: string) => boolean;
   logout: () => void;
   enterChat: () => void;
@@ -38,6 +43,8 @@ interface ChatState {
   markAllRead: () => void;
   setOtherTyping: (v: boolean) => void;
   appendReply: () => void;
+  openDetail: (m: Message) => void;
+  closeDetail: () => void;
 }
 
 let seq = 0;
@@ -45,9 +52,27 @@ const nextId = () => `m${Date.now()}_${seq++}`;
 let replyIdx = 0;
 
 const seedMessages = (): Message[] => [
-  { id: nextId(), from: 'other', text: '到家了吗？', time: minutesAgo(30), status: 'sent' },
-  { id: nextId(), from: 'me', text: '刚到～今天好想你', time: minutesAgo(28), status: 'read' },
-  { id: nextId(), from: 'other', text: '我也是！明天见 💗', time: minutesAgo(27), status: 'sent' },
+  { id: nextId(), from: 'other', kind: 'text', text: '到家了吗？', time: minutesAgo(30), status: 'sent' },
+  { id: nextId(), from: 'me', kind: 'text', text: '刚到～今天好想你', time: minutesAgo(28), status: 'read' },
+  {
+    id: nextId(),
+    from: 'other',
+    kind: 'image',
+    text: '',
+    meta: { tint: '#D4A5FF', emoji: '🌇' },
+    time: minutesAgo(27),
+    status: 'sent',
+  },
+  {
+    id: nextId(),
+    from: 'other',
+    kind: 'voice',
+    text: '',
+    meta: { duration: 7 },
+    time: minutesAgo(26),
+    status: 'sent',
+  },
+  { id: nextId(), from: 'other', kind: 'text', text: '我也是！明天见 💗', time: minutesAgo(25), status: 'sent' },
 ];
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -56,6 +81,7 @@ export const useChatStore = create<ChatState>((set) => ({
   other: MOCK_OTHER,
   messages: seedMessages(),
   otherTyping: false,
+  detailMessage: null,
 
   login: (code) => {
     const hit = INVITE_CODES[code.trim().toLowerCase()];
@@ -82,6 +108,7 @@ export const useChatStore = create<ChatState>((set) => ({
     const msg: Message = {
       id: nextId(),
       from: 'me',
+      kind: 'text',
       text: t,
       time: nowHHMM(),
       status: 'sent',
@@ -101,7 +128,7 @@ export const useChatStore = create<ChatState>((set) => ({
     set((s) => ({
       messages: s.messages.map((m) =>
         m.id === id
-          ? { ...m, status: 'recalled-me', text: '' }
+          ? { ...m, status: 'recalled-me' as const, text: '', kind: 'text' as const }
           : m,
       ),
     })),
@@ -122,8 +149,11 @@ export const useChatStore = create<ChatState>((set) => ({
       otherTyping: false,
       messages: [
         ...s.messages,
-        { id: nextId(), from: 'other', text, time: nowHHMM(), status: 'sent' },
+        { id: nextId(), from: 'other', kind: 'text', text, time: nowHHMM(), status: 'sent' },
       ],
     }));
   },
+
+  openDetail: (m) => set({ detailMessage: m }),
+  closeDetail: () => set({ detailMessage: null }),
 }));

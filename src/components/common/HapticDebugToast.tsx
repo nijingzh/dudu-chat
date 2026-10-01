@@ -11,6 +11,7 @@ interface DebugInfo {
 /**
  * 触觉 debug 提示：浏览器震不了，用一枚玻璃小胶囊显示「此处会震 + 强度」。
  * 浮现—停留—淡出（只 opacity/transform），真机阶段验证后可整体移除。
+ * 居中位移放 framer 的 x（CSS transform 会被动画帧覆盖）。
  */
 export default function HapticDebugToast() {
   const [info, setInfo] = useState<DebugInfo | null>(null);
@@ -35,6 +36,7 @@ export default function HapticDebugToast() {
       {info && (
         <motion.div
           className="haptic-debug"
+          style={{ x: '-50%' }}
           initial={{ opacity: 0, y: -10, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}

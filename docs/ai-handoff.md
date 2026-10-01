@@ -1,5 +1,17 @@
-duduchat ｜ AI 交接上下文 v6（2026-10-01，P1B 疑问裁决落码）
-v6 更新（2026-10-01，P1B 疑问裁决收口；触发 = 江衍提供真值三则 + 会话确认）：
+duduchat ｜ AI 交接上下文 v7（2026-10-01，P1B 复审通过 + P1C 交付待复审）
+v7 更新（2026-10-01，P1C 交付：五页一批；触发 = 江衍「继续 放行」）：
+【P1B 复审通过】含真值裁决批（v6）一并放行。
+【交付物】五页 + 底部导航 + 消息类型扩展：pages/SweetMoments（天数大数字+心跳 / 纪念日倒计时 / 心情打卡 / 爱情日记 / 照片墙占位）、pages/Surprises（今日情话 / 约会转盘 / 写封蜜语 / 慢递信 / 一起听歌）、pages/Me（资料卡+四入口+JSON 数据导出真可用）、pages/Profile（主题色 4 款 / 聊天背景 4 款，均改 CSS 变量真实生效）、pages/Settings（触觉 3 档 / 通知 3 项 / 外观 3 项 / 消息锁占位，10 开关全部真实生效或标注占位）、pages/AnniversaryPage（增删改+倒计时）、pages/MessageDetail（图片缩放 / 语音波形进度 / 上下文预览）；components/common/BottomNav（四 tab，3.3 GlassNav）；store/settingsStore（localStorage 持久化+applySettingsToCSS）/ sweetStore（心情/日记/纪念日/便签/慢递信）/ uiStore（tab/sub 导航）；chatStore 消息扩 kind: text|image|voice + detailMessage；mock 种子消息补图片/语音各一。设置真实生效链路：触觉开关→useHaptics 分档拦截；粒子开关→FloatingParticles 显隐；心跳开关→天数动画；主题色→--color-bubble-self-from/to（气泡/发送钮/大数字联动）；聊天背景→--bg-gradient-from/to；气泡柔光→--bubble-shadow。
+【实测全过】四 tab 切换；心情打卡持久化（2026-10-01「想你」）；天数 44 / 倒计时 13 天（10-14 我的生日）；纪念日增「第一次约会 12-25」成 4 条；主题切薰衣草后 --color-bubble-self-from=#C8A2FF computed 实证；粒子开关双向显隐 + localStorage 持久化；图片详情缩放 130% + 上下文预览；语音详情播放波形推进 13 格 / 3″-7″。
+【自检修复四则】①haptic debug 胶囊溢出屏右缘遮内容（vision 三页都拍到）→ 根因：motion.div 动画 transform 覆盖 CSS translateX(-50%)、元素从屏幕中线贴边；修 = 居中位移挪 framer style x:'-50%' + max-width/ellipsis 防长文溢出，实测盒居中（中线 196.5=196.5）；②转盘无扇区感/指针弱：原 8 个全圆 seg 互相覆盖成整圆 → 盘面改 conic-gradient 8 段交替 rgba(255,255,255,0.34)/rgba(255,143,171,0.34)（45°/格）、指针 26px+白描边；③day-label「第 N 天」N 未替换 → 改「我们在一起的日子 · 起点 2026-08-19」；④心情选中态白框生硬 → 白 0.45→0.32 + 柔光 0 6px 16px rgba(255,182,193,0.28) + 位移 -3→-2px。
+【主观微调（实数，待复审）】天数 84px 心跳 scale 1.045/1.025 双拍 1.6s；倒计时数字 40px；转盘 224px 盘面/中心钮 62px/1.6s cubic(0.16,0.9,0.24,1)；照片墙双列瀑布流 6 格占位（高 140-200px）；底部导航 4 tab 圆角 28px 条、激活上浮 2px；开关 46×27px 滑块 21px/220ms；详情蒙层 rgba(60,38,55,0.55)+blur 24px；图片占位 168×126px（气泡）/264×200px（详情）；语音波形 14 格（气泡）/36 格（详情）；聊天输入栏 padding-bottom 72px 避让导航。
+【占位说明】照片墙=渐变+emoji 占位（不用 AI 图，等真实照片）；歌单 4 首占位；语音/图片消息 mock；消息锁开关占位；头像/昵称编辑 P2B。
+【坑·framer 覆盖 CSS transform】motion.div 的动画帧会把 CSS transform 整体覆盖（translateX(-50%) 失效、元素贴边）——motion 组件的常驻位移一律放 style={{x:...}}，别写 CSS transform；定位断言用 getBoundingClientRect 实测勿目测（vision 误读了三轮）。
+【验收】build ✓；393×852 全页截图 vision 巡检 + 数值断言（盒居中/缩放 130%/波形 13 格/settings 持久化）。
+【疑问随批】①照片墙用渐变占位等真实照片，还是先放你们的实拍照（发我就缝进去）；②约会转盘 8 个点子文案要不要换成你们自己的清单；③语音条按住说话的手势（4.2）归 P1D 一起做，本批语音气泡是 mock 消息——确认没歧义。
+
+───────────────────────────────────────────────────
+v6 更新（2026-10-01，P1B 疑问裁决落码；触发 = 江衍提供真值三则 + 会话确认）：
 【裁决登记】①邀请码真值：男方 [REDACTED]（衍）/ 女方 [REDACTED]（她）；②在一起的日子 = 2026-08-19（真值），天数改动态计算 togetherDays()，口径 = 含首日（8/19 = 第 1 天，今日 2026-10-01 显示 44 天，实数待复审）；③登录底部文案「只属于我们两个人的小世界 💌」维持不改；④「点自己气泡出撤回」临时入口待 P1D 长按手势上线时**撤掉**（撤回收进长按菜单）；⑤会话口径确认：邀请码只在设备首次登录填一次，localStorage 记会话启动免登录，「退出」清会话后重新要码（P2B 换 JWT 同逻辑）。昵称未给真值，维持「衍 / 她」占位。
 【改动】constants.ts：INVITE_CODES 换真值两枚、TOGETHER_DAYS 520 删除 → togetherDays() 动态（new Date(2026,7,19) 起算含首日）；Chat.tsx 导航天数改 togetherDays()。
 【验收】build ✓；浏览器实测两枚新码均进入聊天页、导航显示「在一起 44 天」（2026-10-01）✓。

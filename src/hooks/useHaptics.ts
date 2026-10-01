@@ -6,6 +6,7 @@
 import { useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { useSettingsStore } from '../store/settingsStore';
 
 export type HapticKind =
   | 'send' // 发送消息   Impact Light
@@ -110,6 +111,16 @@ function notifyDebug(kind: HapticKind) {
 
 export function useHaptics() {
   const fire = useCallback(async (kind: HapticKind) => {
+    // 设置页分档开关（3.4 触觉：发送/收到/特效）
+    const s = useSettingsStore.getState();
+    const group =
+      kind === 'receive'
+        ? 'receive'
+        : kind === 'special' || kind === 'sweet'
+          ? 'effect'
+          : 'send';
+    if (!s.haptics[group]) return;
+
     const spec = HAPTIC_SPECS[kind];
     notifyDebug(kind);
     if (Capacitor.isNativePlatform()) {

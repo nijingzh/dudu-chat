@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const EMOJIS = ['💗', '🌟', '🌸', '✨'];
 
@@ -37,10 +38,12 @@ function buildParticles(count: number): ParticleSpec[] {
 /**
  * 4.2 甜蜜特效：背景飘浮粒子（💗🌟🌸✨）。
  * 双层结构（外层 particle 漂移 / 内层 particle-sway 摇摆），两层动画互不覆盖。
- * 只动 transform / opacity。
+ * 只动 transform / opacity。设置页「粒子」开关控制显隐。
  */
 export default function FloatingParticles({ count = 16 }: { count?: number }) {
+  const enabled = useSettingsStore((s) => s.appearance.particles);
   const particles = useMemo(() => buildParticles(count), [count]);
+  if (!enabled) return null;
   return (
     <div className="particles-layer" aria-hidden="true">
       {particles.map((p) => (
