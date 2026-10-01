@@ -1,5 +1,16 @@
-duduchat ｜ AI 交接上下文 v4（2026-10-01，两项裁决落码）
-v4 更新（2026-10-01，P1A 疑问裁决收口；触发 = 江衍「1.按你推荐走 2.可以」）：
+duduchat ｜ AI 交接上下文 v5（2026-10-01，P1A 复审通过 + P1B 交付待复审）
+v5 更新（2026-10-01，P1B 交付：登录页 + 聊天主页；触发 = 江衍「都放行。下一步」）：
+【P1A 复审通过】视觉与微调数值全部放行（2026-10-01）。
+【交付物】utils/constants.ts（邀请码 dudu520/mimi520 两码两账号、mock 资料、TOGETHER_DAYS 520、自动回复 5 条、快捷表情 8 枚、登录文案）；store/chatStore.ts（zustand mock：view/消息/撤回/已读/正在输入/登录会话 localStorage）；pages/Login.tsx（情侣头像交叠 + 渐变大标题 + 邀请码玻璃卡 + 错误 shake + 底部文案）；pages/Chat.tsx（GlassNav 昵称/在线/天数/退出 + 气泡区 + mock 轨道：发消息→1.2s 正在输入→2.8s 自动回复）；chat/ 三件（MessageBubble 点自己消息→撤回、TypingIndicator 三点呼吸、ChatInputBar 表情/文本/语音/图片/发送）；common/Avatar.tsx；App.tsx 登录↔聊天 AnimatePresence 淡入浮出 300ms + #ui 保留演示页 + 会话记忆。
+【交互链路实测全过】错误码 →「邀请码不对哦，再看看？」常驻 + shake；dudu520 → 聊天页（导航「🐰她 在线 · 在一起 520 天」）；发消息 → 300ms 已读 → 1.2s 正在输入三点 → 2.8s 自动回复；点自己气泡 →「撤回」→「你撤回了一条消息」；表情面板 8 枚、点 💗 入输入框。
+【主观微调（实数，待复审）】头像 72px 交叠 translateX ±13px rotate ±6°、右前左后 z 分层；登录标题 40px 渐变字 #FF6B8A→#C8A2FF；错误 shake translateX ±6/5/-3px 420ms；气泡 max-width 76% / padding 9px 14px / 字号 14px；时间戳 10px、已读薰衣草紫；撤回占位 11px op 0.55；输入栏圆角 24px、图标钮 36px、发送圆钮 38px 渐变粉影 0 6px 18px rgba(255,107,138,0.4)；表情面板 8 枚 22px；正在输入 6px 点 180ms stagger 呼吸 1.2s；页面过渡 opacity + y 12px 300ms cubic(0.22,0.8,0.3,1)；mock 轨道 1.2s / 2.8s。
+【占位说明】语音/图片按钮 = 占位 toast（P2B 接上传）；头像 emoji 占位（我的页上传）；昵称「她」、邀请码、天数 520 均占位待真值。
+【自检修复三则】①错误提示原 600ms 随 shake 消失看不清 → 错误文案常驻到输入变化、shake 用 key 重放；②mock 种子时间戳 21:03 硬编码与当前时间倒流 → minutesAgo() 动态生成（30/28/27 分钟前，实测 16:18→16:20→16:21 递增）；③登录头像交叠白色菱形生硬 → translateX 10→13px + z-index 分层（vision 复验无瑕疵）。
+【验收】build ✓；393×852 截图 vision 巡检登录/聊天页无错位/遮挡/溢出。
+【疑问随批】①邀请码/昵称/天数真实值（现全占位）；②登录底部文案「只属于我们两个人的小世界 💌」措辞认不认；③点气泡出撤回是 P1D 长按手势之前的临时入口，长按上线后是否保留点击入口。
+
+───────────────────────────────────────────────────
+v4 更新（2026-10-01，两项裁决落码；触发 = 江衍「1.按你推荐走 2.可以」）：
 【裁决登记】①通用按钮触觉档 = Selection 轻（新 kind 'tap'「按钮轻触」），发送键单独 'send' Impact Light；②慢递信近似口径通过（v2 登记方案转正，P2B 按此实现）。
 【改动】useHaptics.ts 加 'tap'（按钮轻触 / Selection / 轻 / vibrate 4ms）；GlassButton 加 haptic?: HapticKind prop（默认 'tap'，发送键显式 haptic="send"）；UiKit 发送键传 send、按钮说明改写、触觉表补第 9 行「按钮轻触」（标注裁决补充）。
 【验收】npm run build ✓；eval 实测：点 GlassButton → 胶囊「🩷 按钮轻触 · Selection 轻」、点「发送 💗」→「🩷 发送消息 · Impact Light」✓。
