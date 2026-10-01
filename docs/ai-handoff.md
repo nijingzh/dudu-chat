@@ -1,4 +1,11 @@
-duduchat ｜ AI 交接上下文 v7（2026-10-01，P1B 复审通过 + P1C 交付待复审）
+duduchat ｜ AI 交接上下文 v8（2026-10-01，P1C 复审通过 + P1D 交付待复审）
+v8 更新（2026-10-01，照片墙附批 + P1D 交付；触发 = 江衍「照片墙可以做导入、删除的功能 其他都过 继续」）：
+【裁决】①P1C 复审通过（含全部主观微调值）；②照片墙做导入/删除功能（不走等真实照片路线）；③P1C 两问按「其他都过」收口：转盘 8 点子保持通用清单、语音「按住说话」手势归 P1D。
+【交付物】照片墙附批：sweetStore photos（localStorage duduchat-photos）+ 导入（file input 多选≤6 张、canvas 压到长边≤900px JPEG 0.72）+ 删除（右上 ✕）。P1D：pages/SweetMoments 照片墙功能版；components/effects/SweetEffects（全屏特效层：spoil 撒娇=白描边粉辉光环×2+9 飘心上浮 1500ms / missYou 想你=15 飘落爱心🌸✨ / celebrate 庆祝=3 烟花 13 粒径向 950ms+18 confetti / sad 不开心=灰纱 rgba(126,126,142,0.32)+16 雨滴）+ store/effectStore；MessageBubble 长按 350ms→反应条（💕😂😮😢👍🔥+撤回归长按菜单，裁决 v6④ 兑现：点击出撤回已撤）+ 反应浮出 900ms + 入场 spring(stiffness 320/damping 26) + 反应→特效映射（💕spoil/😂celebrate/😢sad）；ChatInputBar 按住说话（上滑 60px 取消、时长按秒入气泡）+ ✨特效菜单（撒娇/想你/庆祝→发消息+特效）；App 转场按 tab 方向滑入（x 26/18px、320ms）。
+【自修】①「正在输入」指示器卡死：切 tab 卸载 Chat 清掉 mock 回复定时器但 otherTyping 残留 → 卸载时一并复位；②撒娇光环 2px 半透明粉在粉底上隐形 → 白描边 3px+辉光（vision 两轮实证后修）。
+【Phase 1 完成度】P1A~P1D 全部交付；Phase 2（后端）未动。
+【疑问】①聊天里发图片（🖼️）仍是 P1D 占位（P2B 接上传），要不要顺手让聊天也发本地图片（复用照片墙压缩）？②滑动切 tab 手势要不要（现为点 tab+方向滑入）？③特效动态小样可录屏给——静态截图只拍到单帧。
+───── 以下 v7 存档 ─────
 v7 更新（2026-10-01，P1C 交付：五页一批；触发 = 江衍「继续 放行」）：
 【P1B 复审通过】含真值裁决批（v6）一并放行。
 【交付物】五页 + 底部导航 + 消息类型扩展：pages/SweetMoments（天数大数字+心跳 / 纪念日倒计时 / 心情打卡 / 爱情日记 / 照片墙占位）、pages/Surprises（今日情话 / 约会转盘 / 写封蜜语 / 慢递信 / 一起听歌）、pages/Me（资料卡+四入口+JSON 数据导出真可用）、pages/Profile（主题色 4 款 / 聊天背景 4 款，均改 CSS 变量真实生效）、pages/Settings（触觉 3 档 / 通知 3 项 / 外观 3 项 / 消息锁占位，10 开关全部真实生效或标注占位）、pages/AnniversaryPage（增删改+倒计时）、pages/MessageDetail（图片缩放 / 语音波形进度 / 上下文预览）；components/common/BottomNav（四 tab，3.3 GlassNav）；store/settingsStore（localStorage 持久化+applySettingsToCSS）/ sweetStore（心情/日记/纪念日/便签/慢递信）/ uiStore（tab/sub 导航）；chatStore 消息扩 kind: text|image|voice + detailMessage；mock 种子消息补图片/语音各一。设置真实生效链路：触觉开关→useHaptics 分档拦截；粒子开关→FloatingParticles 显隐；心跳开关→天数动画；主题色→--color-bubble-self-from/to（气泡/发送钮/大数字联动）；聊天背景→--bg-gradient-from/to；气泡柔光→--bubble-shadow。

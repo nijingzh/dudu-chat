@@ -38,7 +38,7 @@ interface ChatState {
   login: (code: string) => boolean;
   logout: () => void;
   enterChat: () => void;
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string, kind?: MessageKind, meta?: Message['meta']) => void;
   recall: (id: string) => void;
   markAllRead: () => void;
   setOtherTyping: (v: boolean) => void;
@@ -102,14 +102,15 @@ export const useChatStore = create<ChatState>((set) => ({
 
   enterChat: () => set({ view: 'chat' }),
 
-  sendMessage: (text) => {
+  sendMessage: (text: string, kind: MessageKind = 'text', meta?: Message['meta']) => {
     const t = text.trim();
-    if (!t) return;
+    if (!t && kind === 'text') return;
     const msg: Message = {
       id: nextId(),
       from: 'me',
-      kind: 'text',
+      kind,
       text: t,
+      meta,
       time: nowHHMM(),
       status: 'sent',
     };

@@ -1,6 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useChatStore, type Message } from '../../store/chatStore';
+import { useEffectStore, type EffectKind } from '../../store/effectStore';
+
+const REACTIONS = ['💕', '😂', '😮', '😢', '👍', '🔥'];
+
+/** 反应表情 → 全屏特效映射（4.2）：💕撒娇 ｜ 😂开心 ｜ 😢不开心 */
+const REACTION_FX: Record<string, EffectKind> = {
+  '💕': 'spoil',
+  '😂': 'celebrate',
+  '😢': 'sad',
+};
 
 interface MessageBubbleProps {
   message: Message;
@@ -8,27 +19,51 @@ interface MessageBubbleProps {
 }
 
 /**
- * 消息气泡：自己右粉 / 对方左白（3.1）；支持文字 / 图片占位 / 语音波形。
- * 图片与语音点击 → 消息详情页；点自己的文字消息 → 撤回动作条
- * （P1D 长按手势上线后撤掉点击入口，撤回收进长按菜单）。
+ * 消息气泡：入场弹性浮现（P1D）；长按 350ms → 反应表情条（💕😂😮😢👍🔥）
+ * + 撤回（仅自己的文字消息，裁决：点击入口已撤、收进长按菜单）。
+ * 图片/语音点击 → 消息详情页。
  */
 export default function MessageBubble({ message, onRecall }: MessageBubbleProps) {
   const { fire } = useHaptics();
   const openDetail = useChatStore((s) => s.openDetail);
-  const [showActions, setShowActions] = useState(false);
+  const playFx = useEffectStore((s) => s.play);
+  const [showBar, setShowBar] = useState(false);
+  const [reaction, setReaction] = useState<string | null>(null);
+  const [floatKey, setFloatKey] = useState(0);
+  const holdTimer = useRef<number | undefined>(undefined);
+  const longPressed = useRef(false);
   const mine = message.from === 'me';
 
   if (message.status === 'recalled-me') {
     return <div className="msg-recalled">你撤回了一条消息</div>;
   }
 
-  const open = () => {
-    void fire('tap');
-    openDetail(message);
+  const startHold = () => {
+    longPressed.current = false;
+    holdTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      void fire('longPress');
+      setShowBar(true);
+    }, 350);
+  };
+  const endHold = () => window.clearTimeout(holdTimer.current);
+
+  const pickReaction = (emoji: string) => {
+    void fire('love');
+    setReaction(emoji);
+    setFloatKey((k) => k + 1);
+    setShowBar(false);
+    const fx = REACTION_FX[emoji];
+    if (fx) playFx(fx);
   };
 
   return (
-    <div className={`msg-row ${mine ? 'msg-row--mine' : 'msg-row--other'}`}>
+    <motion.div
+      className={`msg-row ${mine ? 'msg-row--mine' : 'msg-row--other'}`}
+      initial={{ opacity: 0, y: 14, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+    >
       {message.kind === 'image' && (
         <button
           type="button"
@@ -36,13 +71,23 @@ export default function MessageBubble({ message, onRecall }: MessageBubbleProps)
           style={{
             background: `linear-gradient(135deg, ${message.meta?.tint ?? '#FFB3D9'}, rgba(255,255,255,0.5))`,
           }}
-          onClick={open}
+          onClick={() => {
+            void fire('tap');
+            openDetail(message);
+          }}
         >
           <span>{message.meta?.emoji ?? '📷'}</span>
         </button>
       )}
       {message.kind === 'voice' && (
-        <button type="button" className="msg-voice" onClick={open}>
+        <button
+          type="button"
+          className="msg-voice"
+          onClick={() => {
+            void fire('tap');
+            openDetail(message);
+          }}
+        >
           <span className="voice-play">▶</span>
           <span className="voice-wave">
             {Array.from({ length: 14 }).map((_, i) => (
@@ -56,31 +101,58 @@ export default function MessageBubble({ message, onRecall }: MessageBubbleProps)
         <button
           type="button"
           className={`bubble ${mine ? 'bubble-self' : 'bubble-other'}`}
+          onPointerDown={startHold}
+          onPointerUp={endHold}
+          onPointerLeave={endHold}
+          onPointerCancel={endHold}
           onClick={() => {
-            if (!mine) return;
-            void fire('longPress');
-            setShowActions((v) => !v);
+            if (longPressed.current) return;
+            void fire('tap');
+            setShowBar((v) => !v);
           }}
         >
           {message.text}
         </button>
       )}
+
+      <div className="msg-bubble-wrap">
+        {showBar && (
+          <div className="reaction-bar glass-card">
+            {REACTIONS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                className="reaction-item"
+                onClick={() => pickReaction(e)}
+              >
+                {e}
+              </button>
+            ))}
+            {mine && message.kind === 'text' && (
+              <button
+                type="button"
+                className="reaction-recall"
+                onClick={() => {
+                  onRecall(message.id);
+                  setShowBar(false);
+                }}
+              >
+                撤回
+              </button>
+            )}
+          </div>
+        )}
+        {reaction && (
+          <span key={floatKey} className="reaction-float">
+            {reaction}
+          </span>
+        )}
+      </div>
+
       <div className="msg-meta">
         {mine && message.status === 'read' && <span className="msg-read">已读</span>}
         <span className="msg-time">{message.time}</span>
       </div>
-      {showActions && mine && message.kind === 'text' && (
-        <button
-          type="button"
-          className="msg-recall-btn"
-          onClick={() => {
-            onRecall(message.id);
-            setShowActions(false);
-          }}
-        >
-          撤回
-        </button>
-      )}
-    </div>
+    </motion.div>
   );
 }

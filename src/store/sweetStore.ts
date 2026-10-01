@@ -29,6 +29,11 @@ export interface SlowLetter {
   text: string;
   deliverDate: string; // YYYY-MM-DD
 }
+export interface Photo {
+  id: string;
+  src: string; // 压缩后的 dataURL
+  date: string;
+}
 
 interface SweetState {
   mood: { date: string; key: string } | null;
@@ -36,6 +41,7 @@ interface SweetState {
   anniversaries: Anniversary[];
   notes: Note[];
   letters: SlowLetter[];
+  photos: Photo[];
   quoteIdx: number;
   setMood: (key: string) => void;
   addDiary: (author: string, text: string) => void;
@@ -43,6 +49,8 @@ interface SweetState {
   removeAnniversary: (id: string) => void;
   addNote: (from: string, text: string) => void;
   addLetter: (from: string, text: string, deliverDate: string) => void;
+  addPhotos: (photos: Photo[]) => void;
+  removePhoto: (id: string) => void;
   nextQuote: () => void;
 }
 
@@ -87,6 +95,7 @@ export const useSweetStore = create<SweetState>((set, get) => ({
   anniversaries: load<Anniversary[]>('duduchat-anniversaries', DEFAULT_ANNIVERSARIES),
   notes: load<Note[]>('duduchat-notes', []),
   letters: load<SlowLetter[]>('duduchat-letters', []),
+  photos: load<Photo[]>('duduchat-photos', []),
   quoteIdx: 0,
 
   setMood: (key) => {
@@ -130,6 +139,22 @@ export const useSweetStore = create<SweetState>((set, get) => ({
     const letters = [...get().letters, letter];
     set({ letters });
     save('duduchat-letters', letters);
+  },
+
+  addPhotos: (photos) => {
+    const next = [...get().photos, ...photos];
+    set({ photos: next });
+    try {
+      save('duduchat-photos', next);
+    } catch {
+      // localStorage 满（~5MB）：留内存态，P2B 上服务器后根治
+    }
+  },
+
+  removePhoto: (id) => {
+    const photos = get().photos.filter((p) => p.id !== id);
+    set({ photos });
+    save('duduchat-photos', photos);
   },
 
   nextQuote: () => set({ quoteIdx: get().quoteIdx + 1 }),

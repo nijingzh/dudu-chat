@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useHaptics } from '../hooks/useHaptics';
 import { useSettingsStore } from '../store/settingsStore';
-import { useSweetStore, daysUntil } from '../store/sweetStore';
-import { togetherDays } from '../utils/constants';
-import { MOODS, PHOTO_SLOTS } from '../utils/constants';
+import { useSweetStore, daysUntil, type Photo } from '../store/sweetStore';
+import { MOODS, togetherDays } from '../utils/constants';
 import GlassCard from '../components/glass/GlassCard';
+
+/** 图片压到长边 ≤900px 的 JPEG dataURL（localStorage 友好） */
+async function compressImage(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 900 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.72);
+}
 
 /**
  * 甜蜜时光页（设计方案 5.3）：在一起天数大数字 + 心跳动画 / 纪念日倒计时 /
@@ -13,9 +23,22 @@ import GlassCard from '../components/glass/GlassCard';
 export default function SweetMoments() {
   const { fire } = useHaptics();
   const heartbeat = useSettingsStore((s) => s.appearance.heartbeat);
-  const { mood, diary, anniversaries, setMood, addDiary } = useSweetStore();
+  const { mood, diary, anniversaries, photos, setMood, addDiary, addPhotos, removePhoto } =
+    useSweetStore();
   const me = '衍';
   const [text, setText] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const importFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    void fire('love');
+    const list: Photo[] = [];
+    for (const f of Array.from(files).slice(0, 6)) {
+      if (!f.type.startsWith('image/')) continue;
+      list.push({ id: `p${Date.now()}_${list.length}`, src: await compressImage(f), date: f.name });
+    }
+    if (list.length) addPhotos(list);
+  };
 
   const next = anniversaries
     .map((a) => ({ ...a, left: daysUntil(a) }))
@@ -114,19 +137,50 @@ export default function SweetMoments() {
         </GlassCard>
       </section>
 
-      {/* 照片墙 */}
+      {/* 照片墙：导入 / 删除 */}
       <section className="sec">
         <h2 className="sec-title">
-          甜蜜照片墙 <span className="sec-hint">（占位，等真实照片）</span>
+          甜蜜照片墙{' '}
+          <button
+            type="button"
+            className="photo-import-btn"
+            onClick={() => fileRef.current?.click()}
+          >
+            ＋ 导入
+          </button>
         </h2>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            void importFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
         <div className="photo-wall">
-          {PHOTO_SLOTS.map((p, i) => (
-            <div
-              key={i}
-              className="photo-slot"
-              style={{ height: p.height, background: `linear-gradient(135deg, ${p.tint}, rgba(255,255,255,0.55))` }}
-            >
-              <span>{p.emoji}</span>
+          {photos.length === 0 && (
+            <button type="button" className="photo-empty" onClick={() => fileRef.current?.click()}>
+              <span>📷</span>
+              <span>导入我们的照片</span>
+            </button>
+          )}
+          {photos.map((p) => (
+            <div key={p.id} className="photo-tile">
+              <img src={p.src} alt={p.date} />
+              <button
+                type="button"
+                className="photo-del"
+                aria-label="删除照片"
+                onClick={() => {
+                  void fire('swipe');
+                  removePhoto(p.id);
+                }}
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>

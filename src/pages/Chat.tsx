@@ -33,10 +33,11 @@ export default function Chat() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, otherTyping]);
 
-  // 卸载时清掉 mock 轨道的定时器
+  // 离开页面：清 mock 定时器 + 复位「正在输入」，防指示器卡死
   useEffect(
     () => () => {
       timersRef.current.forEach((t) => window.clearTimeout(t));
+      useChatStore.getState().setOtherTyping(false);
     },
     [],
   );
@@ -94,6 +95,26 @@ export default function Chat() {
       <ChatInputBar
         onSend={(text) => {
           handleSend(text);
+        }}
+        onSendVoice={(duration) => {
+          sendMessage('', 'voice', { duration });
+          timersRef.current.push(
+            window.setTimeout(() => setOtherTyping(true), 1200),
+            window.setTimeout(() => {
+              appendReply();
+              void fire('receive');
+            }, 2800),
+          );
+        }}
+        onEffect={(_kind, label) => {
+          sendMessage(label);
+          timersRef.current.push(
+            window.setTimeout(() => setOtherTyping(true), 1400),
+            window.setTimeout(() => {
+              appendReply();
+              void fire('receive');
+            }, 3200),
+          );
         }}
       />
     </div>
